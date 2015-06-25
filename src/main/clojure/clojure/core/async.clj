@@ -202,8 +202,10 @@
      (blockable? [_] true)
      (lock-id [_] id)
      (commit [_]
-             (reset! flag nil)
-             true))))
+       (reset! flag nil)
+       true)
+
+     java.io.Serializable)))
 
 (defn- alt-handler [^Lock flag cb]
   (reify
@@ -216,8 +218,10 @@
      (blockable? [_] true)
      (lock-id [_] (impl/lock-id flag))
      (commit [_]
-             (impl/commit flag)
-             cb)))
+       (impl/commit flag)
+       cb)
+
+     java.io.Serializable))
 
 (defn do-alts
   "returns derefable [val port] if immediate, nil if enqueued"
@@ -656,7 +660,9 @@
            Mult
            (tap* [_ ch close?] (swap! cs assoc ch close?) nil)
            (untap* [_ ch] (swap! cs dissoc ch) nil)
-           (untap-all* [_] (reset! cs {}) nil))
+           (untap-all* [_] (reset! cs {}) nil)
+
+           java.io.Serializable)
         dchan (chan 1)
         dctr (atom nil)
         done (fn [_] (when (zero? (swap! dctr dec))
@@ -748,17 +754,19 @@
                                   (vec (remove pauses (keys chs))))
                                 change)}))
         m (reify
-           Mux
-           (muxch* [_] out)
-           Mix
-           (admix* [_ ch] (swap! cs assoc ch {}) (changed))
-           (unmix* [_ ch] (swap! cs dissoc ch) (changed))
-           (unmix-all* [_] (reset! cs {}) (changed))
-           (toggle* [_ state-map] (swap! cs (partial merge-with core/merge) state-map) (changed))
-           (solo-mode* [_ mode]
-             (assert (solo-modes mode) (str "mode must be one of: " solo-modes))
-             (reset! solo-mode mode)
-             (changed)))]
+            java.io.Serializable
+            Mux
+            (muxch* [_] out)
+            Mix
+            (admix* [_ ch] (swap! cs assoc ch {}) (changed))
+            (unmix* [_ ch] (swap! cs dissoc ch) (changed))
+            (unmix-all* [_] (reset! cs {}) (changed))
+            (toggle* [_ state-map] (swap! cs (partial merge-with core/merge) state-map) (changed))
+            (solo-mode* [_ mode]
+              (assert (solo-modes mode)
+                      (str "mode must be one of: " solo-modes))
+              (reset! solo-mode mode)
+              (changed)))]
     (go-loop [{:keys [solos mutes reads] :as state} (calc-state)]
       (let [[v c] (alts! reads)]
         (if (or (nil? v) (= c change))
@@ -839,18 +847,19 @@
                                          #(if (% topic) % (assoc % topic (mult (chan (buf-fn topic))))))
                                   topic)))
            p (reify
-              Mux
-              (muxch* [_] ch)
+               java.io.Serializable
+               Mux
+               (muxch* [_] ch)
 
-              Pub
-              (sub* [p topic ch close?]
-                    (let [m (ensure-mult topic)]
-                      (tap m ch close?)))
-              (unsub* [p topic ch]
-                      (when-let [m (get @mults topic)]
-                        (untap m ch)))
-              (unsub-all* [_] (reset! mults {}))
-              (unsub-all* [_ topic] (swap! mults dissoc topic)))]
+               Pub
+               (sub* [p topic ch close?]
+                 (let [m (ensure-mult topic)]
+                   (tap m ch close?)))
+               (unsub* [p topic ch]
+                 (when-let [m (get @mults topic)]
+                   (untap m ch)))
+               (unsub-all* [_] (reset! mults {}))
+               (unsub-all* [_ topic] (swap! mults dissoc topic)))]
        (go-loop []
          (let [val (<! ch)]
            (if (nil? val)
