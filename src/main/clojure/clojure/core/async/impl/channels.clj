@@ -11,7 +11,7 @@
   (:require [clojure.core.async.impl.protocols :as impl]
             [clojure.core.async.impl.dispatch :as dispatch]
             [clojure.core.async.impl.mutex :as mutex])
-  (:import [java.util LinkedList Queue Iterator]
+  (:import [java.util List LinkedList Queue Iterator]
            [java.util.concurrent.locks Lock]))
 
 (set! *warn-on-reflection* true)
@@ -29,7 +29,7 @@
   (cleanup [_])
   (abort [_]))
 
-(deftype ManyToManyChannel [^LinkedList takes ^LinkedList puts ^Queue buf closed ^Lock mutex add!]
+(deftype ManyToManyChannel [^List takes ^List puts ^Queue buf closed ^Lock mutex add!]
   MMC
   (cleanup
    [_]

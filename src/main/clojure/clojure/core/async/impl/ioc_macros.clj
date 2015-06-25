@@ -996,15 +996,16 @@
 (defn- fn-handler
   [f]
   (reify
-   Lock
-   (lock [_])
-   (unlock [_])
+    java.io.Serializable
+    Lock
+    (lock [_])
+    (unlock [_])
 
-   impl/Handler
-   (active? [_] true)
-   (blockable? [_] true)
-   (lock-id [_] 0)
-   (commit [_] f)))
+    impl/Handler
+    (active? [_] true)
+    (blockable? [_] true)
+    (lock-id [_] 0)
+    (commit [_] f)))
 
 
 (defn run-state-machine [state]

@@ -40,7 +40,9 @@
      (active? [_] true)
      (blockable? [_] blockable)
      (lock-id [_] 0)
-     (commit [_] f))))
+     (commit [_] f)
+     
+     java.io.Serializable)))
 
 (defn buffer
   "Returns a fixed buffer of size n. When full, puts will block/park."
